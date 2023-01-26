@@ -1,13 +1,20 @@
-import data from "./data.js";
+import data from "./dataDirty.js";
 import headersUnformated from "./headersUnformated.js";
-import fs from 'fs';
+import {open} from 'fs/promises';
 
 function stringReplacerSpacesToUnderscore(arrStr){
     const result = []
     for (let item of arrStr){
-        result.push(item.replace("(", "").replace(")", "").replace(" ", "_").replace(" ", "_").replace(" ", "_").toLowerCase())
+        result.push(
+            item
+                .replace("(", "")
+                .replace(")", "")
+                .replace(" ", "_")
+                .replace(" ", "_")
+                .replace(" ", "_")
+                .toLowerCase()
+        )
     }
-    console.log("headers", result)
     return result
 }
 
@@ -20,30 +27,29 @@ class Extractor{
         this.pathToSave = pathToSave;
     }
 
-    dataMapping(){
+    async dataMapping() {
         const arrLines = this.stringSrc.split("\n")
 
-        for (let line=0; line < arrLines.length-14975; line++){
+        for (let line=0; line<arrLines.length; line++) {
 
             const lineSliced = arrLines[line].replace(" ", "").split("\t");
-            console.log("lineSliced", lineSliced)
             this.result[lineSliced[0]] = {}
 
-            for(let item=1; item < lineSliced.length; item++) {
-                let itemNotParsed = parseFloat(lineSliced[item])
-                console.log("itemNotParsed", itemNotParsed)
-
-                let itemParsed = parseFloat(lineSliced[item])
-                console.log("itemParsed", itemParsed)
-                this.result[lineSliced[0]][this.headers[item-1]] = itemParsed;
+            for (let item=1; item<lineSliced.length; item++) {
+                this.result[lineSliced[0]][this.headers[item - 1]] = parseFloat(lineSliced[item]);
             }
         }
+        console.log("Mapped:", this.result);
+        await this.saveMappedData();
+    }
 
-        console.log(this.result)
-        fs.writeFile("./test.txt", "123")
+    async saveMappedData(){
+        let fileHandle = await open(this.pathToSave, 'w');
+        await fileHandle.writeFile(JSON.stringify(this.result));
+        console.log("Json saved!")
     }
 }
 
 
-const test = new Extractor(data, "test")
-test.dataMapping()
+const test = new Extractor(data, "./mappedGeoData.json")
+await test.dataMapping()
