@@ -1,27 +1,11 @@
-import data from "./dataDirty.js";
-import headersUnformated from "./headersUnformated.js";
+import data from "./data/dataDirty.js";
+import headersUnformated from "./data/headersFormatted.js";
 import {open} from 'fs/promises';
-
-function stringReplacerSpacesToUnderscore(arrStr){
-    const result = []
-    for (let item of arrStr){
-        result.push(
-            item
-                .replace("(", "")
-                .replace(")", "")
-                .replace(" ", "_")
-                .replace(" ", "_")
-                .replace(" ", "_")
-                .toLowerCase()
-        )
-    }
-    return result
-}
 
 class Extractor{
     constructor(stringSrc, pathToSave) {
-        this.result = []
-        this.headers = stringReplacerSpacesToUnderscore(headersUnformated)
+        this.result = [];
+        this.headers = headersUnformated;
 
         this.stringSrc = stringSrc;
         this.pathToSave = pathToSave;
@@ -36,7 +20,7 @@ class Extractor{
             this.result.push({
                 date: lineSliced[0],
                 data: {}
-            })
+            });
 
             for (let item=1; item<lineSliced.length; item++) {
                 this.result[line]["data"][this.headers[item - 1]] = parseFloat(lineSliced[item]);
@@ -49,10 +33,9 @@ class Extractor{
     async saveMappedData(){
         let fileHandle = await open(this.pathToSave, 'w');
         await fileHandle.writeFile(JSON.stringify(this.result));
-        console.log("Json saved!")
+        console.log("Json saved!");
     }
 }
 
-
-const test = new Extractor(data, "./mappedGeoData.json")
-await test.dataMapping()
+const test = new Extractor(data, "./mappedGeoData.json");
+await test.dataMapping();
