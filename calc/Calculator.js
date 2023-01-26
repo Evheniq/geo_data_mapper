@@ -8,8 +8,12 @@ const data = await JSON.parse(
 
 class GeoParamsCalculatorFactory{
     create(type, data){
-        if(type === "annual daily"){
+        if (type === "monthly") {
+            return new GeoParamsCalculator(data, [1, 2]);
+        } else if(type === "annual daily"){
             return new GeoParamsCalculator(data, [0, 1]);
+        } else if (type === "annual monthly") {
+            return new GeoParamsCalculator(data, [1]);
         }
     }
 }
@@ -22,7 +26,7 @@ class GeoParamsCalculator{
         this.result = {};
     }
 
-    calc(selector){
+    calc(selector, avg=false){
         for (const item of this.data){
             const splitDateSelector = item.date.split(".");
             let currentDateSelector = [];
@@ -36,17 +40,19 @@ class GeoParamsCalculator{
                 const currentResultSlot = this.result[currentDateSelectorString];
                 currentResultSlot["count"] = currentResultSlot["count"] + 1;
                 currentResultSlot["sum"] = currentResultSlot["sum"] + item.data[selector];
-                currentResultSlot["result"] = currentResultSlot["count"] / currentResultSlot["sum"];
             } else {
                 this.result[currentDateSelectorString] = {};
                 const currentResultSlot = this.result[currentDateSelectorString];
                 currentResultSlot["count"] = 1;
                 currentResultSlot["sum"] = item.data[selector];
-                currentResultSlot["result"] = item.data[selector];
             }
         }
 
-        // this.saveData(this.result, "")
+        if (avg) {
+            for (const item of Object.keys(this.result)){
+                this.result[item]["avg"] = this.result[item]["sum"] / this.result[item]["count"];
+            }
+        }
     }
 
     async saveData(data, path){
@@ -56,11 +62,23 @@ class GeoParamsCalculator{
     }
 }
 
-// const monthly = new GeoParamsCalculator(data, [1, 2])
 const calcFactory = new GeoParamsCalculatorFactory()
-const monthly = calcFactory.create("annual daily", data)
 
-monthly.calc("air_temperature")
+const monthly = calcFactory.create("monthly", data)
+const annual_daily = calcFactory.create("annual daily", data)
+const annual_monthly = calcFactory.create("annual monthly", data)
+
+monthly.calc("air_temperature", false)
 console.log(
-    monthly.result
+    "calc:", monthly.result
+)
+
+annual_daily.calc("air_temperature")
+console.log(
+    "annual_daily:", annual_daily.result
+)
+
+annual_monthly.calc("air_temperature", true)
+console.log(
+    "annual_monthly:", annual_monthly.result
 )
