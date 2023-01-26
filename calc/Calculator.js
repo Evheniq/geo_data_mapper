@@ -1,7 +1,8 @@
-import {open, readFile} from 'fs/promises';
-import headers from "../resources/data/headersFormatted";
+import {open, readFile, mkdir} from 'fs/promises';
+import {existsSync} from "fs";
+import headers from "../resources/data/headersFormatted.js";
 const textJson = await readFile(
-    new URL('../resources/mappedGeoData.json', import.meta.url)
+    new URL('../resources/data/mappedGeoData.json', import.meta.url)
 )
 const data = await JSON.parse(
     textJson.toString()
@@ -9,12 +10,22 @@ const data = await JSON.parse(
 
 class GeoParamsCalculatorFactory{
     create(type, data){
+        if (!existsSync("results")){
+            mkdir("results/")
+        }
+
+        const pathToSave = "results/" + type
+
+        if (!existsSync(pathToSave)){
+            mkdir(pathToSave)
+        }
+
         if (type === "monthly") {
-            return new GeoParamsCalculator(data, [1, 2], type);
+            return new GeoParamsCalculator(data, [1, 2], pathToSave);
         } else if(type === "annual daily"){
-            return new GeoParamsCalculator(data, [0, 1], type);
+            return new GeoParamsCalculator(data, [0, 1], pathToSave);
         } else if (type === "annual monthly") {
-            return new GeoParamsCalculator(data, [1], type);
+            return new GeoParamsCalculator(data, [1], pathToSave);
         }
     }
 }
@@ -24,11 +35,12 @@ class GeoParamsCalculator{
         this.data = data;
         this.compareDateItems = compareDateItems;
         this.pathToSave = pathToSave;
-
-        this.result = {};
     }
 
     calc(selector){
+        const storage = {};
+        const result = [];
+
         let avg = false;
         if (["air_temperature", "discharge_observed", "discharge_simulated", "soil_water"].includes(selector)){
             avg = true;
@@ -43,25 +55,28 @@ class GeoParamsCalculator{
 
             const currentDateSelectorString = currentDateSelector.join(".");
 
-            if (this.result[currentDateSelectorString]) {
-                const currentResultSlot = this.result[currentDateSelectorString];
+            if (storage[currentDateSelectorString]) {
+                const currentResultSlot = storage[currentDateSelectorString];
                 currentResultSlot["count"] = currentResultSlot["count"] + 1;
                 currentResultSlot["sum"] = currentResultSlot["sum"] + item.data[selector];
             } else {
-                this.result[currentDateSelectorString] = {};
-                const currentResultSlot = this.result[currentDateSelectorString];
+                storage[currentDateSelectorString] = {};
+                const currentResultSlot = storage[currentDateSelectorString];
                 currentResultSlot["count"] = 1;
                 currentResultSlot["sum"] = item.data[selector];
             }
         }
 
-        if (avg) {
-            for (const item of Object.keys(this.result)){
-                this.result[item]["avg"] = this.result[item]["sum"] / this.result[item]["count"];
+
+        for (const item of Object.keys(storage)){
+            if (avg) {
+                result.push(storage[item]["sum"] / storage[item]["count"]);
+                continue
             }
+            result.push(storage[item]["sum"])
         }
 
-        this.saveData(this.result, this.pathToSave + "/" + selector + ".json")
+        this.saveData(result, this.pathToSave + "/" + selector + ".json")
     }
 
     async saveData(data, path){
@@ -77,11 +92,8 @@ const monthly = calcFactory.create("monthly", data)
 const annual_daily = calcFactory.create("annual daily", data)
 const annual_monthly = calcFactory.create("annual monthly", data)
 
-// for(const headTitle of headers){
-//     monthly.calc(headTitle)
-// }
-
-monthly.calc("air_temperature")
-console.log(
-    "calc:", monthly.result
-)
+for(const headTitle of headers){
+    monthly.calc(headTitle)
+    annual_daily.calc(headTitle)
+    annual_monthly.calc(headTitle)
+}
