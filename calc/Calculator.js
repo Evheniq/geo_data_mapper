@@ -66,17 +66,21 @@ class GeoParamsCalculator{
                 currentResultSlot["sum"] = item.data[selector];
             }
         }
-
-        for (const item of Object.keys(storage)){
-            if (avg) {
-                result.push(storage[item]["sum"] / storage[item]["count"]);
-                continue;
+        if (avg) {
+            for (const item of Object.keys(storage)) {
+                storage[item]["avg"] = storage[item]["sum"] / storage[item]["count"];
             }
-            result.push(storage[item]["sum"]);
         }
-
-        // this.saveData(result, this.pathToSave + "/" + selector + ".json");
         this.saveData(storage, this.pathToSave + "/" + selector + ".json");
+
+        // for (const item of Object.keys(storage)){
+        //     if (avg) {
+        //         result.push(storage[item]["sum"] / storage[item]["count"]);
+        //         continue;
+        //     }
+        //     result.push(storage[item]["sum"]);
+        // }
+        // this.saveData(result, this.pathToSave + "/" + selector + ".json");
     }
 
     async saveData(data, path){
