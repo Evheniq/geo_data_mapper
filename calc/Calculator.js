@@ -39,7 +39,7 @@ class GeoParamsCalculator{
 
     calc(selector){
         const storage = {};
-        const result = [];
+        let result = [];
 
         let avg = false;
         if (["air_temperature", "discharge_observed", "discharge_simulated", "soil_water"].includes(selector)){
@@ -67,22 +67,22 @@ class GeoParamsCalculator{
             }
         }
 
-
         for (const item of Object.keys(storage)){
             if (avg) {
                 result.push(storage[item]["sum"] / storage[item]["count"]);
-                continue
+                continue;
             }
-            result.push(storage[item]["sum"])
+            result.push(storage[item]["sum"]);
         }
 
-        this.saveData(result, this.pathToSave + "/" + selector + ".json")
+        // this.saveData(result, this.pathToSave + "/" + selector + ".json");
+        this.saveData(storage, this.pathToSave + "/" + selector + ".json");
     }
 
     async saveData(data, path){
         let fileHandle = await open(path, 'w');
         await fileHandle.writeFile(JSON.stringify(data));
-        console.log("Json saved!")
+        console.log("Json saved: ", path);
     }
 }
 
