@@ -1,0 +1,12 @@
+{
+  "name": "geo_data_mapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "https://github.com/Evheniq",
+  "license": "ISC"
+}
