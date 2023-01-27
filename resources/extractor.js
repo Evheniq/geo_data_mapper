@@ -20,7 +20,7 @@ function stringReplacerSpacesToUnderscore(arrStr){
 
 class Extractor{
     constructor(stringSrc, pathToSave) {
-        this.result = {}
+        this.result = []
         this.headers = stringReplacerSpacesToUnderscore(headersUnformated)
 
         this.stringSrc = stringSrc;
@@ -33,10 +33,13 @@ class Extractor{
         for (let line=0; line<arrLines.length; line++) {
 
             const lineSliced = arrLines[line].replace(" ", "").split("\t");
-            this.result[lineSliced[0]] = {}
+            this.result.push({
+                date: lineSliced[0],
+                data: {}
+            })
 
             for (let item=1; item<lineSliced.length; item++) {
-                this.result[lineSliced[0]][this.headers[item - 1]] = parseFloat(lineSliced[item]);
+                this.result[line]["data"][this.headers[item - 1]] = parseFloat(lineSliced[item]);
             }
         }
         console.log("Mapped:", this.result);
